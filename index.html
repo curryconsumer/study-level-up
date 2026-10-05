@@ -7,7 +7,6 @@
 <title>Study Level Up</title>
 
 <style>
-
 * {
     box-sizing: border-box;
 }
@@ -59,8 +58,7 @@ h1 {
     color: #555;
 }
 
-
-/* XP PROGRESS BAR */
+/* PROGRESS BAR */
 
 .bar {
     width: 100%;
@@ -73,9 +71,8 @@ h1 {
 
 .xp-segment {
     height: 100%;
-    transition: width .25s ease;
+    flex-shrink: 0;
 }
-
 
 /* TASK */
 
@@ -96,7 +93,6 @@ h1 {
     color: #666;
 }
 
-
 /* BUTTONS */
 
 button {
@@ -114,7 +110,6 @@ button:hover {
     opacity: .85;
 }
 
-
 /* INPUTS */
 
 select,
@@ -126,7 +121,6 @@ input {
     font-size: 15px;
     background: white;
 }
-
 
 /* RESET */
 
@@ -144,11 +138,9 @@ input {
     margin-top: 12px;
 }
 
-
 /* MOBILE */
 
 @media(max-width:600px) {
-
     .task {
         align-items: stretch;
         flex-direction: column;
@@ -157,12 +149,9 @@ input {
     button {
         width: 100%;
     }
-
 }
-
 </style>
 </head>
-
 
 <body>
 
@@ -191,11 +180,7 @@ Study, earn XP, level up.
 
     </div>
 
-
-    <!-- COLOURED XP BAR -->
-
     <div class="bar" id="mainBar"></div>
-
 
     <div class="small" id="totalXp">
         Total XP: 0
@@ -215,7 +200,7 @@ Study, earn XP, level up.
 </div>
 
 
-<!-- COMPLETE TASK -->
+<!-- TASK -->
 
 <div class="card">
 
@@ -223,9 +208,7 @@ Study, earn XP, level up.
 
         <div>
 
-            <h2>
-                Complete a study task
-            </h2>
+            <h2>Complete a study task</h2>
 
             <p>
                 Complete one task in your selected subject.
@@ -246,9 +229,7 @@ Study, earn XP, level up.
 
 <div class="card">
 
-    <h2>
-        Reset Progress
-    </h2>
+    <h2>Reset Progress</h2>
 
     <p class="small">
         This permanently resets all XP and levels.
@@ -280,11 +261,9 @@ Study, earn XP, level up.
 
 <script>
 
-
 /* SUBJECTS */
 
 const subjects = [
-
     "Art",
     "Biology",
     "Chemistry",
@@ -297,9 +276,7 @@ const subjects = [
     "Mathematics",
     "Religious Studies",
     "Physics"
-
 ];
-
 
 const TASK_XP = 25;
 
@@ -309,101 +286,62 @@ const RESET_PHRASE = "BAGUETTES ARE HOLY";
 /* SUBJECT COLOURS */
 
 const subjectColours = {
-
     "Art": "#e53935",
-
     "Biology": "#40e0d0",
-
     "Chemistry": "#ffd600",
-
     "Computer Science": "#87ceeb",
-
     "English Language": "#00008b",
-
     "English Literature": "#8b4513",
-
     "French": "#ff69b4",
-
     "Geography": "#006400",
-
     "History": "#ff8c00",
-
     "Mathematics": "#d4af37",
-
     "Religious Studies": "#c0c0c0",
-
     "Physics": "#228b22"
-
 };
 
 
-/*
-LEVEL SYSTEM
-
-Level 1 = 100 XP
-Level 2 = 105 XP
-Level 3 = 110 XP
-Level 4 = 115 XP
-etc.
-*/
-
+/* LEVEL XP */
 
 function xpForLevel(level) {
-
     return 100 + (level - 1) * 5;
-
 }
 
 
-/* WORK OUT CURRENT LEVEL */
+/* GET CURRENT LEVEL */
 
 function getLevel(totalXp) {
 
     let level = 1;
-
     let remaining = totalXp;
 
     while (remaining >= xpForLevel(level)) {
-
         remaining -= xpForLevel(level);
-
         level++;
-
     }
 
     return {
-
         level: level,
-
         current: remaining,
-
         needed: xpForLevel(level)
-
     };
-
 }
 
 
-/* LOAD SAVED DATA */
+/* LOAD DATA */
 
 let data;
 
 try {
-
     data = JSON.parse(
         localStorage.getItem("studyLevelUp")
     );
-
-} catch (e) {
-
+} catch (error) {
     data = null;
-
 }
 
 
-/*
-CREATE NEW DATA IF THERE IS NONE
-*/
+/* CREATE DATA IF NECESSARY */
 
 if (
     !data ||
@@ -411,52 +349,39 @@ if (
 ) {
 
     data = {
-
         totalXp: 0,
-
         subjects: {},
-
         history: []
-
     };
-
 }
 
 
-/*
-MAKE SURE ALL SUBJECTS EXIST
-*/
+/* MAKE SURE SUBJECT DATA EXISTS */
 
 if (!data.subjects) {
-
     data.subjects = {};
-
 }
 
 subjects.forEach(subject => {
 
-    if (
-        typeof data.subjects[subject] !== "number"
-    ) {
-
+    if (typeof data.subjects[subject] !== "number") {
         data.subjects[subject] = 0;
-
     }
 
 });
 
 
 /*
-HISTORY WAS NOT IN THE OLD VERSION.
+IMPORTANT:
 
-If the user already had progress,
-keep it safe.
+If the old version of the app was used,
+there may be no task history.
+
+New tasks will be recorded from now on.
 */
 
 if (!Array.isArray(data.history)) {
-
     data.history = [];
-
 }
 
 
@@ -488,16 +413,15 @@ function completeTask() {
 
 
     /*
-    Remember exactly which subject
-    the XP came from.
+    Record this exact task.
+
+    This is what allows every 25 XP
+    section to keep its own colour.
     */
 
     data.history.push({
-
         subject: subject,
-
         xp: TASK_XP
-
     });
 
 
@@ -518,20 +442,14 @@ function resetProgress() {
     ) {
 
         data = {
-
             totalXp: 0,
-
             subjects: {},
-
             history: []
-
         };
 
 
         subjects.forEach(subject => {
-
             data.subjects[subject] = 0;
-
         });
 
 
@@ -556,7 +474,20 @@ function resetProgress() {
 
 
 /*
-CREATE THE COLOURED PROGRESS BAR
+DRAW THE PROGRESS BAR
+
+Each task gets its own segment.
+
+For example:
+
+Physics +25
+Physics +25
+French +25
+Art +25
+
+becomes:
+
+GREEN | GREEN | PINK | RED
 */
 
 function renderProgressBar() {
@@ -565,7 +496,7 @@ function renderProgressBar() {
         document.getElementById("mainBar");
 
 
-    /* Remove old segments */
+    /* Clear the current bar */
 
     bar.innerHTML = "";
 
@@ -575,11 +506,11 @@ function renderProgressBar() {
 
 
     /*
-    Find how much total XP has already
-    been used by previous levels.
+    Calculate how much XP belongs
+    to previous levels.
     */
 
-    let xpBeforeCurrentLevel = 0;
+    let previousLevelsXp = 0;
 
     for (
         let level = 1;
@@ -587,69 +518,56 @@ function renderProgressBar() {
         level++
     ) {
 
-        xpBeforeCurrentLevel +=
+        previousLevelsXp +=
             xpForLevel(level);
 
     }
 
 
     /*
-    XP position where the current level starts
+    Track where we are in the
+    complete task history.
     */
 
-    let xpPosition = 0;
+    let totalPosition = 0;
 
-
-    /*
-    Go through every completed task
-    in the order it happened.
-    */
 
     data.history.forEach(task => {
 
-
-        const taskStart =
-            xpPosition;
-
+        const taskStart = totalPosition;
 
         const taskEnd =
-            xpPosition + task.xp;
+            totalPosition + task.xp;
 
-
-        xpPosition = taskEnd;
+        totalPosition = taskEnd;
 
 
         /*
-        Ignore tasks completely before
-        the current level.
+        Ignore tasks belonging entirely
+        to previous levels.
         */
 
-        if (
-            taskEnd <= xpBeforeCurrentLevel
-        ) {
-
+        if (taskEnd <= previousLevelsXp) {
             return;
-
         }
 
 
         /*
-        Work out how much of this task
-        belongs to the current level.
+        Find the part of this task
+        that belongs to the current level.
         */
 
         const visibleStart =
             Math.max(
                 taskStart,
-                xpBeforeCurrentLevel
+                previousLevelsXp
             );
 
 
         const visibleEnd =
             Math.min(
                 taskEnd,
-                xpBeforeCurrentLevel
-                + overall.needed
+                previousLevelsXp + overall.needed
             );
 
 
@@ -658,15 +576,11 @@ function renderProgressBar() {
 
 
         if (visibleXp <= 0) {
-
             return;
-
         }
 
 
-        /*
-        Create coloured section
-        */
+        /* CREATE COLOURED SEGMENT */
 
         const segment =
             document.createElement("div");
@@ -685,70 +599,18 @@ function renderProgressBar() {
 
 
         segment.style.backgroundColor =
-            subjectColours[task.subject];
+            subjectColours[task.subject] ||
+            "#171717";
 
 
         bar.appendChild(segment);
 
     });
 
-
-    /*
-    If the user has old XP that wasn't recorded
-    in the history system, show it as black
-    rather than losing it.
-    */
-
-    const historyXp =
-        data.history.reduce(
-            (total, task) => total + task.xp,
-            0
-        );
-
-
-    const oldXp =
-        data.totalXp - historyXp;
-
-
-    if (
-        oldXp > 0 &&
-        overall.level === 1
-    ) {
-
-        const segment =
-            document.createElement("div");
-
-
-        segment.className =
-            "xp-segment";
-
-
-        segment.style.width =
-            (
-                Math.min(
-                    oldXp,
-                    overall.needed
-                ) /
-                overall.needed *
-                100
-            ) + "%";
-
-
-        segment.style.backgroundColor =
-            "#171717";
-
-
-        bar.insertBefore(
-            segment,
-            bar.firstChild
-        );
-
-    }
-
 }
 
 
-/* RENDER EVERYTHING */
+/* RENDER */
 
 function render() {
 
@@ -783,7 +645,7 @@ function render() {
 }
 
 
-/* CREATE SUBJECT DROPDOWN */
+/* SUBJECT DROPDOWN */
 
 const select =
     document.getElementById(
@@ -794,9 +656,7 @@ const select =
 subjects.forEach(subject => {
 
     const option =
-        document.createElement(
-            "option"
-        );
+        document.createElement("option");
 
     option.value = subject;
 

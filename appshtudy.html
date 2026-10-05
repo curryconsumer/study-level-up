@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Level Up</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f4f6;color:#171717}
+.app{max-width:800px;margin:0 auto;padding:32px 20px 50px}
+h1{margin:0 0 6px;font-size:32px}
+.subtitle{color:#666;margin-bottom:28px}
+.card{background:white;border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.level-row{display:flex;justify-content:space-between;align-items:end;margin-bottom:12px}
+.level{font-size:28px;font-weight:bold}.xp-text{color:#555}
+.bar{width:100%;height:18px;background:#e5e7eb;border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;width:0%;background:#171717;transition:width .25s ease}
+.task{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.task h2{margin:0 0 6px;font-size:21px}.task p{margin:0;color:#666}
+button{border:0;border-radius:9px;padding:12px 18px;font-size:15px;font-weight:bold;cursor:pointer;background:#171717;color:white}
+button:hover{opacity:.85}
+select,input{width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;font-size:15px;background:white}
+.reset{margin-top:8px}
+.reset button{background:#8b0000}
+.small{color:#777;font-size:13px;margin-top:12px}
+@media(max-width:600px){.task{align-items:stretch;flex-direction:column}button{width:100%}}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>Study Level Up</h1>
+<div class="subtitle">Study, earn XP, level up.</div>
+
+<div class="card">
+<div class="level-row">
+<div class="level" id="level">Level 1</div>
+<div class="xp-text" id="xpText">0 / 100 XP</div>
+</div>
+<div class="bar"><div class="bar-fill" id="mainBar"></div></div>
+<div class="small" id="totalXp">Total XP: 0</div>
+</div>
+
+<div class="card">
+<h2>Subject</h2>
+<select id="subjectSelect"></select>
+</div>
+
+<div class="card">
+<div class="task">
+<div>
+<h2>Complete a study task</h2>
+<p>Complete one task in your selected subject.</p>
+</div>
+<button onclick="completeTask()">Complete Task (+25 XP)</button>
+</div>
+</div>
+
+<div class="card">
+<h2>Reset Progress</h2>
+<p class="small">This permanently resets all XP and levels. Type the exact phrase to reset: 'BAGUETTES ARE HOLY'.</p>
+<input id="resetPhrase" placeholder="Type the reset phrase">
+<div class="reset"><button onclick="resetProgress()" id="resetButton" disabled>Reset Progress</button></div>
+</div>
+</div>
+
+<script>
+const subjects=[
+"Art","Biology","Chemistry","Computer Science","English Language",
+"English Literature","French","Geography","History","Mathematics",
+"Religious Studies","Physics"
+];
+
+const TASK_XP=25;
+const RESET_PHRASE="BAGUETTES ARE HOLY";
+
+// Level 1 needs 100 XP.
+// Each next level needs 5 more XP than the previous one:
+// Level 1: 100, Level 2: 105, Level 3: 110, etc.
+//
+// XP carries over automatically. For example, if you earn enough XP
+// to pass a level with some left over, that extra XP stays toward the next level.
+function xpForLevel(level){
+    return 100 + (level-1)*5;
+}
+
+function getLevel(totalXp){
+    let level=1;
+    let remaining=totalXp;
+    while(remaining>=xpForLevel(level)){
+        remaining-=xpForLevel(level);
+        level++;
+    }
+    return {
+        level:level,
+        current:remaining,
+        needed:xpForLevel(level)
+    };
+}
+
+let data;
+try{
+    data=JSON.parse(localStorage.getItem("studyLevelUp"));
+}catch(e){
+    data=null;
+}
+
+if(!data || typeof data.totalXp!=="number" || !data.subjects){
+    data={
+        totalXp:0,
+        subjects:Object.fromEntries(subjects.map(s=>[s,0]))
+    };
+}
+
+subjects.forEach(s=>{
+    if(typeof data.subjects[s]!=="number") data.subjects[s]=0;
+});
+
+function save(){
+    localStorage.setItem("studyLevelUp",JSON.stringify(data));
+}
+
+function completeTask(){
+    const subject=document.getElementById("subjectSelect").value;
+    data.totalXp+=TASK_XP;
+    data.subjects[subject]+=TASK_XP;
+    save();
+    render();
+}
+
+function resetProgress(){
+    if(document.getElementById("resetPhrase").value===RESET_PHRASE){
+        data={
+            totalXp:0,
+            subjects:Object.fromEntries(subjects.map(s=>[s,0]))
+        };
+        save();
+        document.getElementById("resetPhrase").value="";
+        document.getElementById("resetButton").disabled=true;
+        render();
+    }
+}
+
+function render(){
+    const overall=getLevel(data.totalXp);
+    document.getElementById("level").textContent="Level "+overall.level;
+    document.getElementById("xpText").textContent=
+        overall.current+" / "+overall.needed+" XP";
+    document.getElementById("mainBar").style.width=
+        (overall.current/overall.needed*100)+"%";
+    document.getElementById("totalXp").textContent=
+        "Total XP: "+data.totalXp;
+}
+
+const select=document.getElementById("subjectSelect");
+subjects.forEach(subject=>{
+    const option=document.createElement("option");
+    option.value=subject;
+    option.textContent=subject;
+    select.appendChild(option);
+});
+
+document.getElementById("resetPhrase").addEventListener("input",function(){
+    document.getElementById("resetButton").disabled=this.value!==RESET_PHRASE;
+});
+
+render();
+</script>
+</body>
+</html>
